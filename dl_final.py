@@ -24,46 +24,17 @@ import copy
 
 plt.ion()   # interactive mode
 
+seed = 42
+np.random.seed(seed)
+torch.manual_seed(seed)
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 from google.colab import auth
 auth.authenticate_user()
 
 from google.colab import drive
 drive.mount('/content/gdrive')
-
-data_transforms = {
-    'train': transforms.Compose([
-        transforms.RandomRotation(45),
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], 
-                             std=[0.229, 0.224, 0.225])
-    ]),
-    'val': transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], 
-                             std=[0.229, 0.224, 0.225])
-    ]),
-}
-
-
-
-#data_dir = '/content/gdrive/My Drive/Colab Notebooks/our_dataset'
-data_dir = '/content/gdrive/My Drive/Colab Notebooks/data1/bully'
-image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x),
-                                          data_transforms[x])
-                  for x in ['train', 'val']}
-dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=4,
-                                             shuffle=True, num_workers=4)
-              for x in ['train', 'val']}
-dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
-
-class_names = image_datasets['train'].classes
-
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
 
 datadir = "/content/gdrive/My Drive/Colab Notebooks/bullying_pics"
 def load_split_train_test(datadir, valid_size = .3, test_size = 0.33):
@@ -88,13 +59,13 @@ def load_split_train_test(datadir, valid_size = .3, test_size = 0.33):
   test_data = datasets.ImageFolder(datadir, transform=test_transforms)
   val_data = datasets.ImageFolder(datadir, transform=test_transforms)
   num_train = len(train_data)
-  
+
   
   indices = list(range(num_train))
   split = int(np.floor(valid_size * num_train))
-  #print("Split1:",split)
+
   split2 = int(np.floor(test_size * split))
-  #print("Split2:",split2)
+
   
   from torch.utils.data.sampler import SubsetRandomSampler
   train_idx, test_idx = indices[split:], indices[:split]
@@ -105,15 +76,20 @@ def load_split_train_test(datadir, valid_size = .3, test_size = 0.33):
   trainloader = torch.utils.data.DataLoader(train_data, sampler=train_sampler, batch_size=3,num_workers=2)
   testloader = torch.utils.data.DataLoader(test_data, sampler=test_sampler, batch_size=3, num_workers=2)
   valloader = torch.utils.data.DataLoader(val_data, sampler=val_sampler, batch_size=3, num_workers=2)
-  train_dataset_size=len(train_sampler)
+ 
   test_dataset_size=len(test_sampler)
+  train_dataset_size=len(train_sampler)
   val_dataset_size=len(val_sampler)
   class_names = trainloader.dataset.classes
+
   return trainloader, testloader ,valloader, class_names , train_dataset_size, test_dataset_size, val_dataset_size, 
 
 trainloader, testloader, valloader, class_names, train_dataset_size, test_dataset_size, val_dataset_size  = load_split_train_test(datadir, .3, 0.33)
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+import torch.nn as nn
+import torch.nn.functional as F
 
 class SEC_NET(nn.Module):
     _net_config = [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M']
@@ -193,7 +169,7 @@ class SEC_NET(nn.Module):
     #initialize weights using He's technique
     def _configure_weights(self):
         for index, module in enumerate(self.modules()):
-            # print(index, "-->", module)  #diplay all modules 
+            
             if isinstance(module, nn.Conv2d):
                 nn.init.kaiming_normal_(module.weight, mode='fan_out', nonlinearity='relu')
                 if module.bias is not None:
@@ -207,8 +183,7 @@ class SEC_NET(nn.Module):
     
     def forward(self, x):
         x = self.architecture(x)
-        #print(x.size(0))
-        #print(x.size())
+       
         x = self.average_pool(x)
         x = x.view(x.size(0), -1)  #reshape, let row be the size of x and column inferred from dimension 
         x = self.fully_connected(x)
@@ -218,9 +193,8 @@ class SEC_NET(nn.Module):
     
 net = SEC_NET(input_channels=3, class_size=10)
 net = net.to(device)
-#print(net)
 
-net.load_state_dict(torch.load("/content/gdrive/My Drive/Colab Notebooks/model_weights.pt"))
+net.load_state_dict(torch.load("/content/gdrive/My Drive/Colab Notebooks/model_train.pt"))
 
 #original- don't change or delete for now till pretrained is working!!!
 def train_model(net, learning_rate=0.001, momentum=0.9, weight_decay=0.0005, epoch_size=2):
@@ -249,30 +223,25 @@ def train_model(net, learning_rate=0.001, momentum=0.9, weight_decay=0.0005, epo
 
             # print statistics
             training_loss += loss.item()
+            
             if i % 50 == 49:    # print every 50 mini-batches
-
+                
                 training_loss = 0.0
-
+                
     return net
 
 model1 = train_model(net)
 
 correct_predictions = 0.0
-for i, data in enumerate(dataloaders['val']):
+for i, data in enumerate(valloader):
     test_x, test_y = data
     test_x = test_x.to(device)
     test_y = test_y.to(device)
     
     outputs = net(test_x)
     _, model_prediction = torch.max(outputs.data, 1)
-    correct_predictions += torch.sum(model_prediction == test_y).item()
-    
-
-   
-    class_names[torch.max(model_prediction).item()]
     
 torch.save(model1.state_dict(), '/content/gdrive/My Drive/Colab Notebooks/model_train.pt')
-
 
 from PIL import Image
 def predict(image_name):
