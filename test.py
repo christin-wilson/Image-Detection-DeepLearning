@@ -31,7 +31,7 @@ best_prediction = 0
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    print(vars(args))
+#    print(vars(args))
     args = vars(args) #convert arguments to a dict
     if args['pretrained']:
         # process image
