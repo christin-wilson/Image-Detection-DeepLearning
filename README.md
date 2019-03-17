@@ -13,7 +13,10 @@ In terms of code usage, we rewrote the vgg16 code and borrowed some ideas from t
 https://github.com/pytorch/examples/blob/42e5b996718797e45c46a25c55b031e6768f8440/imagenet /main.py
 https://github.com/pytorch/vision/blob/master/torchvision/models/vgg.py
 
-• To run the code input the command: "python test.py -p 1 -i <imagename>"
+• To run the code,
+1. Add the "best_model.pt" file to the weights folder.
+  https://drive.google.com/open?id=1tHsYCQfQbzadhBOQRgNztK4NiyybR-Tp 
+2. Input the command: "python test.py -p 1 -i <imagename>"
 
 Reference Papers:
 We followed the following paper: very deep convolutional networks for large-scale image recognition
