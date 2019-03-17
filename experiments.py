@@ -1,7 +1,11 @@
 import shutil
 import numpy as np
-from load_data import *
+#from load_data import *
+from class_names import class_names
 from model import SEC_NET
+#added the two lines
+import torch
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def secnet(pretrained=False, **kwargs):
     '''
