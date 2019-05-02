@@ -1,6 +1,4 @@
 
-
-
 def train(net, learning_rate=0.001, momentum=0.9, weight_decay=0.0005, epoch_size=10):
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.SGD(net.parameters(), lr=learning_rate, momentum=0.9)
