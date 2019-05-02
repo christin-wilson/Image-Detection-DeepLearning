@@ -1,11 +1,9 @@
 import shutil
 import numpy as np
-#from load_data import *
-from class_names import class_names
+from load_data import *
 from model import SEC_NET
-#added the two lines
-import torch
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+import subprocess
+import os
 
 def secnet(pretrained=False, **kwargs):
     '''
@@ -22,8 +20,18 @@ def test(net, img):
     outputs = net(img)
     _, model_prediction = torch.max(outputs.data, 1)
     prediction = class_names[torch.max(model_prediction).item()]
+    print(prediction)
+    if prediction == 'not-bully':
+        return prediction
+    else:
+        result = obj_detection(net, img)
+        return result
 
-    return prediction
+def obj_detection(net, img):
+    #result = subprocess.Popen(["./darknet", "detect", "cfg/yolov3.cfg", "yolov3.weights", "data/dog.jpg"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #output, errors = result.communicate()
+    result = os.system("./darknet detect cfg/yolov3.cfg yolov3.weights data/dog.jpg")
+    return result
 
 def validate(net, criterion, dataloaders):
 
@@ -65,7 +73,7 @@ def validate(net, criterion, dataloaders):
     print("Accuracy of the network on {} testset is {:2.2%}".format(dataset_sizes['val'], validation_acc))
     return validation_acc
 
-def train_model(net, criterion, optimizer, scheduler, weight_decay=0.0005, epoch_size=2):
+def train_model(net, criterion, optimizer, scheduler, epoch_size=2):
     print("Training Model")
     for epoch in range(epoch_size):  # loop over the dataset multiple times
         #lr_reduction_scheduler.step()
@@ -95,9 +103,8 @@ def train_model(net, criterion, optimizer, scheduler, weight_decay=0.0005, epoch
 
     print('Finished Training')
 
-def save_checkpoint(net, is_best, filename='weights/temp_model.pt'):
-    print("Saving model...")
-    torch.save(net.state_dict(), filename)
+def save_checkpoint(net, is_best):
     if is_best:
-        shutil.copyfile(filename, 'weights/best_model.pt')
-    print("Model saved")
+        print("Saving model...")
+        torch.save(net.state_dict(), '/content/gdrive/My Drive/Colab Notebooks/best_model.pt')
+        print("Model saved")
