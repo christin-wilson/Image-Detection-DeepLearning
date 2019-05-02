@@ -16,7 +16,8 @@ https://github.com/pytorch/vision/blob/master/torchvision/models/vgg.py
 • To run the code,
 1. Add the "best_model.pt" file to the weights folder.
   https://drive.google.com/open?id=1tHsYCQfQbzadhBOQRgNztK4NiyybR-Tp 
-2. Input the command: "python main.py -p 1 -i my_image.jpg"
+2. Add the "wt.weights" file from the same drive link to the darknet folder.  
+3. Input the command: "python main.py -p 1 -i my_image.jpg"
 
 Reference Papers:
 We followed the following paper: very deep convolutional networks for large-scale image recognition
