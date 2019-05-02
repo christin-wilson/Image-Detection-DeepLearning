@@ -35,3 +35,4 @@ class_names = image_datasets['train'].classes
 #print(class_names)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #print(device)
+
