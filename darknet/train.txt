@@ -1,0 +1,6 @@
+multi-img/000004.jpg
+multi-img/000014.jpg
+multi-img/000019.jpg
+multi-img/000029.jpg
+multi-img/000041.jpg
+multi-img/000045.jpg
