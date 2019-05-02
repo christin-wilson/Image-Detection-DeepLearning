@@ -30,6 +30,7 @@ def test(net, img):
 def obj_detection(net, img):
     #result = subprocess.Popen(["./darknet", "detect", "cfg/yolov3.cfg", "yolov3.weights", "data/dog.jpg"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     #output, errors = result.communicate()
+    os.system("cd darknet") 
     result = os.system("./darknet detect cfg/yolov3.cfg yolov3.weights data/dog.jpg")
     return result
 
